@@ -32,7 +32,7 @@
     <property name="datetimeoffset.type" value="DATETIME"/>
 
     <changeSet id="${base_id}-0" author="moonpyk">
-        <tagDatabase tag="${base_id}"/>
+        <tagDatabase tag="${base_id}-before"/>
     </changeSet>
 
     <changeSet author="moonpyk" id="${base_id}-1">
@@ -246,4 +246,7 @@
                                  referencedColumnNames="id" referencedTableName="${tables.users}"
                                  referencedTableSchemaName="${schema.name}"/>
     </changeSet>
+    <changeSet id="${base_id}-26" author="moonpyk">
+        <tagDatabase tag="${base_id}"/>
+    </changeSet>    
 </databaseChangeLog>
