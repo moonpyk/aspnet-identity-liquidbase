@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <property name="base_id" value="identitycore"/>
+
+    <property name="schema.name" dbms="mssql" value="dbo"/>
+    <property name="schema.name" value="identity"/>
+
+    <property name="key.type" value="UUID"/>
+
+    <property name="tables.prefix" value=""/>
+    <property name="tables.users" value="${tables.prefix}users"/>
+    <property name="tables.user_roles" value="${tables.prefix}user_roles"/>
+    <property name="tables.user_claims" value="${tables.prefix}user_claims"/>
+    <property name="tables.user_logins" value="${tables.prefix}user_logins"/>
+    <property name="tables.user_tokens" value="${tables.prefix}user_tokens"/>
+    <property name="tables.roles" value="${tables.prefix}roles"/>
+    <property name="tables.role_claims" value="${tables.prefix}roles_claims"/>
+
+    <property name="clob.type" dbms="postgresql" value="text"/>
+    <property name="clob.type" dbms="mssql" value="nvarchar(MAX)"/>
+    <property name="clob.type" value="CLOB"/>
+
+    <property name="varchar.type" dbms="mssql" value="nvarchar"/>
+    <property name="varchar.type" value="varchar"/>
+
+    <property name="datetimeoffset.type" dbms="mssql" value="datetimeoffset"/>
+    <property name="datetimeoffset.type" dbms="postgresql" value="timestamptz"/>
+    <property name="datetimeoffset.type" value="DATETIME"/>
+
+    <changeSet id="${base_id}-0" author="moonpyk">
+        <tagDatabase tag="${base_id}"/>
+    </changeSet>
+
+    <changeSet author="moonpyk" id="${base_id}-1">
+        <createTable schemaName="${schema.name}" tableName="${tables.role_claims}">
+            <column autoIncrement="true" name="id" type="int">
+                <constraints primaryKey="true" primaryKeyName="pk_role_claims"/>
+            </column>
+            <column name="claim_type" type="${clob.type}"/>
+            <column name="claim_value" type="${clob.type}"/>
+            <column name="role_id" type="${key.type}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-2">
+        <createTable schemaName="${schema.name}" tableName="${tables.roles}">
+            <column name="id" type="${key.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="concurrency_stamp" type="${clob.type}"/>
+            <column name="name" type="${varchar.type}(256)"/>
+            <column name="normalized_name" type="${varchar.type}(256)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-3">
+        <createTable schemaName="${schema.name}" tableName="${tables.user_claims}">
+            <column autoIncrement="true" name="id" type="int">
+                <constraints primaryKey="true" primaryKeyName="pk_user_claims"/>
+            </column>
+            <column name="claim_type" type="${clob.type}"/>
+            <column name="claim_value" type="${clob.type}"/>
+            <column name="user_id" type="${key.type}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-4">
+        <createTable schemaName="${schema.name}" tableName="${tables.user_logins}">
+            <column name="login_provider" type="${varchar.type}(450)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_key" type="${varchar.type}(450)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider_display_name" type="${clob.type}"/>
+            <column name="user_id" type="${key.type}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-5">
+        <createTable schemaName="${schema.name}" tableName="${tables.user_roles}">
+            <column name="user_id" type="${key.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="${key.type}">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-6">
+        <createTable schemaName="${schema.name}" tableName="${tables.user_tokens}">
+            <column name="user_id" type="${key.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="login_provider" type="${varchar.type}(450)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="${varchar.type}(450)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" type="${clob.type}"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-7">
+        <createTable schemaName="${schema.name}" tableName="${tables.users}">
+            <column name="id" type="${key.type}">
+                <constraints nullable="false"/>
+            </column>
+            <column name="access_failed_count" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="concurrency_stamp" type="${clob.type}"/>
+            <column name="email" type="${varchar.type}(256)"/>
+            <column name="email_confirmed" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lockout_enabled" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lockout_end" type="${datetimeoffset.type}"/>
+            <column name="normalized_email" type="${varchar.type}(256)"/>
+            <column name="normalized_username" type="${varchar.type}(256)"/>
+            <column name="password_hash" type="${clob.type}"/>
+            <column name="phone_number" type="${clob.type}"/>
+            <column name="phone_number_confirmed" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="security_stamp" type="${clob.type}"/>
+            <column name="two_factor_enabled" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="${varchar.type}(256)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-8">
+        <addPrimaryKey schemaName="${schema.name}" columnNames="id" constraintName="pk_roles"
+                       tableName="${tables.roles}"/>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-9">
+        <addPrimaryKey schemaName="${schema.name}" columnNames="login_provider, provider_key"
+                       constraintName="pk_user_logins"
+                       tableName="${tables.user_logins}"/>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-10">
+        <addPrimaryKey schemaName="${schema.name}" columnNames="user_id, role_id" constraintName="pk_user_roles"
+                       tableName="${tables.user_roles}"/>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-11">
+        <addPrimaryKey schemaName="${schema.name}" columnNames="user_id, login_provider, name"
+                       constraintName="pk_user_tokens"
+                       tableName="${tables.user_tokens}"/>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-12">
+        <addPrimaryKey schemaName="${schema.name}" columnNames="id" constraintName="pk_users"
+                       tableName="${tables.users}"/>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-13">
+        <createIndex schemaName="${schema.name}" indexName="email_index" tableName="${tables.users}">
+            <column name="normalized_email"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-14">
+        <createIndex schemaName="${schema.name}" indexName="ix_role_claims_role_id"
+                     tableName="${tables.role_claims}">
+            <column name="role_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-15">
+        <createIndex schemaName="${schema.name}" indexName="ix_user_claims_user_id"
+                     tableName="${tables.user_claims}">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-16">
+        <createIndex schemaName="${schema.name}" indexName="ix_user_logins_user_id"
+                     tableName="${tables.user_logins}">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-17">
+        <createIndex schemaName="${schema.name}" indexName="ix_user_roles_role_id"
+                     tableName="${tables.user_roles}">
+            <column name="role_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-18">
+        <createIndex schemaName="${schema.name}" indexName="ix_user_roles_user_id"
+                     tableName="${tables.user_roles}">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-19">
+        <createIndex schemaName="${schema.name}" indexName="ix_normalized_name" tableName="${tables.roles}">
+            <column name="normalized_name"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-20">
+        <createIndex schemaName="${schema.name}" indexName="ix_normalized_username" tableName="${tables.users}"
+                     unique="true">
+            <column name="normalized_username"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-21">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableSchemaName="${schema.name}"
+                                 baseTableName="${tables.role_claims}"
+                                 constraintName="fk_role_claims_roles_role_id" deferrable="false"
+                                 initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="${tables.roles}"
+                                 referencedTableSchemaName="${schema.name}"/>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-22">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="${tables.user_claims}"
+                                 baseTableSchemaName="${schema.name}"
+                                 constraintName="fk_user_claims_users_user_id" deferrable="false"
+                                 initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="${tables.users}"
+                                 referencedTableSchemaName="${schema.name}"/>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-23">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="${tables.user_logins}"
+                                 baseTableSchemaName="${schema.name}"
+                                 constraintName="fk_user_logins_users_user_id" deferrable="false"
+                                 initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="${tables.users}"
+                                 referencedTableSchemaName="${schema.name}"/>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-24">
+        <addForeignKeyConstraint baseColumnNames="role_id" baseTableName="${tables.user_roles}"
+                                 baseTableSchemaName="${schema.name}"
+                                 constraintName="fk_user_roles_roles_role_id" deferrable="false"
+                                 initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="${tables.roles}"
+                                 referencedTableSchemaName="${schema.name}"/>
+    </changeSet>
+    <changeSet author="moonpyk" id="${base_id}-25">
+        <addForeignKeyConstraint baseColumnNames="user_id" baseTableName="${tables.user_roles}"
+                                 baseTableSchemaName="${schema.name}"
+                                 constraintName="fk_user_roles_users_user_id" deferrable="false"
+                                 initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"
+                                 referencedColumnNames="id" referencedTableName="${tables.users}"
+                                 referencedTableSchemaName="${schema.name}"/>
+    </changeSet>
+</databaseChangeLog>
