@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
-                   xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
+<databaseChangeLog xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
 
     <property name="base_id" value="identitycore"/>
 
     <property name="schema.name" dbms="mssql" value="dbo"/>
-    <property name="schema.name" value="identity"/>
+    <property name="schema.name" dbms="postgresql" value="identity"/>
+    <property name="schema.name" value=""/>
 
     <property name="key.type" value="UUID"/>
 
@@ -35,6 +36,21 @@
         <tagDatabase tag="${base_id}-before"/>
     </changeSet>
 
+    <changeSet id="${base_id}-pg-schema" author="moonpyk" dbms="postgresql">
+        <sql>CREATE SCHEMA IF NOT EXISTS identity;</sql>
+        <rollback>
+            <sql>DROP SCHEMA IF EXISTS identity;</sql>
+        </rollback>
+    </changeSet>
+    <changeSet id="${base_id}-pg-extensions" author="moonpyk" dbms="postgresql">
+        <sql>CREATE EXTENSION IF NOT EXISTS "uuid-ossp" WITH SCHEMA ${schema.name};</sql>
+        <rollback>
+            <sql>
+                SET search_path TO ${schema.name};
+                DROP EXTENSION IF EXISTS "uuid-ossp";
+            </sql>
+        </rollback>
+    </changeSet>
     <changeSet author="moonpyk" id="${base_id}-1">
         <createTable schemaName="${schema.name}" tableName="${tables.role_claims}">
             <column autoIncrement="true" name="id" type="int">
@@ -112,30 +128,33 @@
             <column name="id" type="${key.type}">
                 <constraints nullable="false"/>
             </column>
-            <column name="access_failed_count" type="int">
+            <column name="username" type="${varchar.type}(256)"/>
+            <column name="normalized_username" type="${varchar.type}(256)"/>
+            <column name="email" type="${varchar.type}(256)"/>
+            <column name="normalized_email" type="${varchar.type}(256)"/>
+            <column name="email_confirmed" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="password_hash" type="${clob.type}"/>
+
+            <column name="access_failed_count" type="int" defaultValueNumeric="0">
                 <constraints nullable="false"/>
             </column>
             <column name="concurrency_stamp" type="${clob.type}"/>
-            <column name="email" type="${varchar.type}(256)"/>
-            <column name="email_confirmed" type="BOOLEAN">
-                <constraints nullable="false"/>
-            </column>
-            <column name="lockout_enabled" type="BOOLEAN">
+
+            <column name="lockout_enabled" type="BOOLEAN" defaultValueBoolean="false">
                 <constraints nullable="false"/>
             </column>
             <column name="lockout_end" type="${datetimeoffset.type}"/>
-            <column name="normalized_email" type="${varchar.type}(256)"/>
-            <column name="normalized_username" type="${varchar.type}(256)"/>
-            <column name="password_hash" type="${clob.type}"/>
             <column name="phone_number" type="${clob.type}"/>
-            <column name="phone_number_confirmed" type="BOOLEAN">
+            <column name="phone_number_confirmed" type="BOOLEAN" defaultValueBoolean="false">
                 <constraints nullable="false"/>
             </column>
             <column name="security_stamp" type="${clob.type}"/>
-            <column name="two_factor_enabled" type="BOOLEAN">
+            <column name="two_factor_enabled" type="BOOLEAN" defaultValueBoolean="false">
                 <constraints nullable="false"/>
             </column>
-            <column name="username" type="${varchar.type}(256)"/>
         </createTable>
     </changeSet>
     <changeSet author="moonpyk" id="${base_id}-8">
@@ -246,7 +265,42 @@
                                  referencedColumnNames="id" referencedTableName="${tables.users}"
                                  referencedTableSchemaName="${schema.name}"/>
     </changeSet>
+    <changeSet id="${base_id}-views-pg" author="moonpyk" dbms="postgresql">
+        <createView viewName="v_users_roles" schemaName="${schema.name}">
+            SELECT
+            u.id,
+            u.username,
+            u.normalized_username,
+            STRING_AGG(r.name, '|') AS role_names,
+            STRING_AGG(r.normalized_name, '|') AS normalized_role_names
+            FROM ${schema.name}.${tables.users} u
+            INNER JOIN ${schema.name}.${tables.user_roles} ur ON u.id = ur.user_id
+            INNER JOIN ${schema.name}.${tables.roles} r ON ur.role_id = r.id
+            GROUP BY u.id;
+        </createView>
+    </changeSet>
+    <changeSet id="moonpyk" author="${base_id}-data-0 moonpyk">
+        <insert tableName="${tables.users}" schemaName="${schema.name}">
+            <column name="id" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="username" value="admin"/>
+            <column name="normalized_username" value="ADMIN"/>
+            <column name="email" value="admin@test.com"/>
+            <column name="normalized_email" value="ADMIN@TEST.COM"/>
+            <column name="email_confirmed" valueBoolean="true"/>
+            <column name="lockout_enabled" valueBoolean="false"/>
+        </insert>
+        <insert tableName="${tables.roles}" schemaName="${schema.name}">
+            <column name="id" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="name" value="admin"/>
+            <column name="normalized_name" value="ADMIN"/>
+        </insert>
+        <insert tableName="${tables.user_roles}" schemaName="${schema.name}">
+            <column name="user_id" value="00000000-0000-0000-0000-000000000000"/>
+            <column name="role_id" value="00000000-0000-0000-0000-000000000000"/>
+        </insert>
+        <rollback/>
+    </changeSet>
     <changeSet id="${base_id}-26" author="moonpyk">
         <tagDatabase tag="${base_id}"/>
-    </changeSet>    
+    </changeSet>
 </databaseChangeLog>
